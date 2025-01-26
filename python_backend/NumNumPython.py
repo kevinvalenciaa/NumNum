@@ -3,6 +3,138 @@ import logging
 from dotenv import load_dotenv
 import google.generativeai as genai
 
+def get_ai_response(user_input):
+    # Set environment variables to reduce logging verbosity and manage API settings
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+    os.environ["GRPC_VERBOSITY"] = "NONE"
+    os.environ["GRPC_TRACE"] = ""
+    os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "1"
+
+    logging.getLogger("google").setLevel(logging.ERROR)
+    logging.getLogger("absl").setLevel(logging.ERROR)
+    logging.getLogger("grpc").setLevel(logging.ERROR)
+
+    # Load environment variables from .env file
+    load_dotenv()
+
+    # Retrieve API key from environment variables
+    api_key = os.getenv("API_KEY_HERE")
+    if not api_key:
+        raise ValueError("API key is not set. Please check your .env file.")
+
+    # Configure the API with the retrieved key
+    genai.configure(api_key=api_key)
+
+    # Define the model configuration
+    generation_config = {
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 40,
+        "max_output_tokens": 8192,
+    }
+
+    # Use a valid model name for the generative AI model
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        generation_config=generation_config,
+    )
+
+    # Function to read the dataset (Num_Data.txt)
+    def read_file(file_path):
+        with open(file_path, "r") as file:
+            return file.read()
+
+    # Load dataset
+    file_path = "Num_Data.txt"
+    file_content = read_file(file_path)
+
+    # Initialize chat history and context
+    chat_history = [{"role": "user", "parts": [{"text": user_input}]}]
+
+    context = (f"Hey! You are an AI assistant named Num. Here is the content from Num_Data:\n{file_content}.\n"
+               "Assume the user's location is Queen's University. You can access chat history from the history list. "
+               "If the user says hi or introduces themself, just introduce yourself without using the information "
+               "from the data set. If the user asks a question related to the dataset, do not say hi again. "
+               "Just answer the question.")
+
+    options = ("If the user decides that they want to go to one of the restaurants, provide 3 options for them to choose: "
+               "1. Book reservation, 2. Show routes to get there, 3. Show recommended dishes on the menu")
+
+    # Start a chat session with the user's input and historical context
+    chat_session = model.start_chat(history=chat_history)
+    response = chat_session.send_message(f"{context} {options} {user_input}")
+
+    # Extract the AI's response from the generated message
+    ai_response = response.text if hasattr(response, 'text') else "AI failed to respond"
+    
+    # Return the AI's response
+    return ai_response
+
+
+
+
+
+
+
+
+"""import os
+import logging
+from dotenv import load_dotenv
+import google.generativeai as genai
+
+def get_ai_response(user_input):
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+    os.environ["GRPC_VERBOSITY"] = "NONE"
+    os.environ["GRPC_TRACE"] = ""
+    os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "1"
+
+    logging.getLogger("google").setLevel(logging.ERROR)
+    logging.getLogger("absl").setLevel(logging.ERROR)
+    logging.getLogger("grpc").setLevel(logging.ERROR)
+
+    load_dotenv()
+
+    # Retrieve API key
+    api_key = os.getenv("API_KEY_HERE")
+    if not api_key:
+        raise ValueError("API key is not set. Please check your .env file.")
+
+    # Configure the API with the retrieved key
+    genai.configure(api_key=api_key)
+
+    # Define model configuration
+    generation_config = {
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 40,
+        "max_output_tokens": 8192,
+    }
+
+    # Use a valid model name
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        generation_config=generation_config,
+    )
+
+    # Start of AI logic
+    chat_history = [{"role": "user", "parts": [{"text": user_input}]}]
+
+    context = "Your AI context or data goes here"
+
+    chat_session = model.start_chat(history=chat_history)
+    response = chat_session.send_message(f"{context} {user_input}")
+
+    ai_response = response.text if hasattr(response, 'text') else "AI failed to respond"
+    
+    return ai_response
+
+
+
+ import os
+import logging
+from dotenv import load_dotenv
+import google.generativeai as genai
+
 def main():
     print("NumNum Chatbot")
 
@@ -83,4 +215,4 @@ def main():
         print(f"Num: {ai_response}")
 
 if __name__ == "__main__":
-    main()
+    main() """
