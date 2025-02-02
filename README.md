@@ -5,6 +5,8 @@ To run:
 cd python_backend
 
 2. Run the following commands:
+   
+python 3 -m venv venv
 
 source venv/bin/activate
 
